@@ -14,15 +14,19 @@ import template
 import gui
 from Tkinter import *
 import re
+import sys
+
+enc = sys.getfilesystemencoding()
+sys.setdefaultencoding(enc)
 
 logger = logging.getLogger()
-
-if getattr(sys, 'frozen', False):
-    # frozen
-    BASE_DIR = os.path.dirname(sys.executable)
-else:
-    # unfrozen
-    BASE_DIR = os.path.dirname(os.path.realpath(__file__))
+#
+# if getattr(sys, 'frozen', False):
+# # frozen
+#     BASE_DIR = os.path.dirname(sys.executable)
+# else:
+#     # unfrozen
+#     BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 
 TEMP_FOOTAGE_NAME = "TEMP_FOOTAGE_%05d"
 RENAME_PATTERN = TEMP_FOOTAGE_NAME + "%s"
@@ -204,7 +208,7 @@ def _exec_ffmpeg(src_path, dst_path, is_seq=False, start_number=None):
         batch_string += " -r " + str(frame_rate)
     if is_seq and stats['pix_fmt']:
         batch_string += " -pix_fmt " + stats['pix_fmt']
-    batch_string += " -i " + src_path.decode('utf-8')
+    batch_string += " -i " + src_path
 
     # video setting
     batch_string += TEMPLATE['video'][CONFIG['video']]
@@ -215,7 +219,7 @@ def _exec_ffmpeg(src_path, dst_path, is_seq=False, start_number=None):
     # output setting
     batch_string += " -s " + width + "x" + height
     batch_string += " -r " + str(frame_rate)
-    batch_string += " -y " + dst_path.decode('utf-8')
+    batch_string += " -y " + dst_path
     logger.debug("\tcall ffmpeg:\n\t\t" + batch_string + "\n")
 
     if sys.platform == "win32":
@@ -238,6 +242,7 @@ def _exec_ffmpeg(src_path, dst_path, is_seq=False, start_number=None):
 
 def _walk_folder(folder_path):
     for (normalized_src_path, srcOpt) in _get_sequence_path_dic(folder_path).items():
+        normalized_src_path = normalized_src_path.decode(enc)
         dst_dir_path = os.path.normpath(folder_path + "/../")
         temp_dst_path = _make_dst_file_path(normalized_src_path)
         dst_path = os.path.join(dst_dir_path, os.path.basename(temp_dst_path))
@@ -248,12 +253,12 @@ def _walk_folder(folder_path):
 
             # TempSrcFootageを作成
             last_file_path = _create_temp_src_footage(normalized_src_path)
-            logger.warning("\n\ttempFileを作成しました:\n\t\t" + os.path.dirname(last_file_path))
+            logger.warning(u"\n\ttempFileを作成しました:\n\t\t" + os.path.dirname(last_file_path))
             _exec_ffmpeg(_normalize_padding_file_name(last_file_path), _get_unique_path_with_pad(dst_path), is_seq=True,
                          start_number=0)
 
             # TempSrcFootageを削除
-            logger.warning("\n\ttempFileを削除しました:\n\t\t" + os.path.dirname(last_file_path))
+            logger.warning(u"\n\ttempFileを削除しました:\n\t\t" + os.path.dirname(last_file_path))
             shutil.rmtree(os.path.dirname(last_file_path))
         else:
             _exec_ffmpeg(normalized_src_path, _get_unique_path_with_pad(dst_path), is_seq=True,
@@ -281,7 +286,11 @@ def main():
 
     # windowsならicon表示
     if sys.platform == "win32":
-        root.iconbitmap(default=os.path.normcase(os.path.join(BASE_DIR + '/libs/app.ico')))
+        if getattr(sys, 'frozen', False) and '_MEIPASS2' in os.environ:
+            root.iconbitmap(os.path.join(os.environ['_MEIPASS2'], 'libs/app.ico'))
+        else:
+            root.iconbitmap(
+                default=os.path.normcase(os.path.join(os.path.dirname(os.path.realpath(__file__)) + '/libs/app.ico')))
 
     # 通常実行かconfigか分岐
     if sys.argv[1:] and _ffmpeg_exists(CONFIG['ffmpegPath']) and _ffprobe_exists(CONFIG['ffprobePath']):
@@ -293,14 +302,12 @@ def main():
 
         target_arg = sys.argv[1:]
         logger.info("Hello.")
-        logger.info(template.get_config_path())
-
         logger.debug("given args:\t" + str(target_arg))
         for input_folder_path in target_arg:
             if os.path.isdir(input_folder_path):
                 _walk_folder(input_folder_path)
             else:
-                src_path = input_folder_path
+                src_path = input_folder_path.decode(enc)
                 logger.info("\nfound file is:\t" + src_path)
                 if _is_video(src_path) or _is_video(src_path):
                     dst_path = _get_unique_path_with_pad(_make_dst_file_path(src_path))
