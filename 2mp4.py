@@ -10,29 +10,43 @@ import shutil
 import tempfile
 import shlex
 import logging
-import template
-import gui
 from Tkinter import *
 import re
 import sys
+import template
+import gui
 
-enc = sys.getfilesystemencoding()
-sys.setdefaultencoding(enc)
+
+# 文字コード問題のためのおまじないです。　
+# 実行時にインタプリタへのoption[ -S ]必須です。
+ENC = sys.getfilesystemencoding()
+
+# noinspection PyUnresolvedReferences
+sys.setdefaultencoding(ENC)
+
+ENV_TMP = os.environ.copy()
+ENV_TMP['PYTHONIOENCODING'] = ENC
 
 logger = logging.getLogger()
-#
-# if getattr(sys, 'frozen', False):
-# # frozen
-#     BASE_DIR = os.path.dirname(sys.executable)
-# else:
-#     # unfrozen
-#     BASE_DIR = os.path.dirname(os.path.realpath(__file__))
+
+if getattr(sys, 'frozen', False):
+    # frozen
+    BASE_DIR = os.path.dirname(sys.executable)
+    if sys.platform == "win32" and '_MEIPASS2' in os.environ:
+        BASE_DIR = os.environ['_MEIPASS2']
+    else:
+        BASE_DIR = os.path.dirname(sys.executable)
+
+else:
+    # unfrozen
+    BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 
 TEMP_FOOTAGE_NAME = "TEMP_FOOTAGE_%05d"
 RENAME_PATTERN = TEMP_FOOTAGE_NAME + "%s"
 RAW_PAD_REG = re.compile('\d+$')
 FMT_PAD_REG = re.compile('%\d+d$')
 SEP_REG = re.compile('[\._]$')
+ASCII_REG = re.compile(r'\A[\x00-\x7f]*\Z')
 TEMPLATE = template.get_template()
 config_f = open(template.get_config_path(), 'r')
 CONFIG = json.load(config_f)
@@ -96,11 +110,12 @@ def _get_movie_stats(src_path):
         si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         # si.wShowWindow = subprocess.SW_HIDE # default
         p = subprocess.Popen([CONFIG['ffprobePath'], '-show_streams', src_path], stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE, startupinfo=si)
+                             stderr=subprocess.PIPE, startupinfo=si, env=ENV_TMP)
     else:
         p = subprocess.Popen([CONFIG['ffprobePath'], '-show_streams', src_path], stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
+                             stderr=subprocess.PIPE, env=ENV_TMP)
     out, err = p.communicate()
+    logger.debug("\n\tffprobe error:\n" + err)
     logger.debug("\n\tffprobe log:\n" + out)
     width = re.search('width=(\d+)', out).group(1)
     height = re.search('height=(\d+)', out).group(1)
@@ -242,14 +257,14 @@ def _exec_ffmpeg(src_path, dst_path, is_seq=False, start_number=None):
 
 def _walk_folder(folder_path):
     for (normalized_src_path, srcOpt) in _get_sequence_path_dic(folder_path).items():
-        normalized_src_path = normalized_src_path.decode(enc)
         dst_dir_path = os.path.normpath(folder_path + "/../")
         temp_dst_path = _make_dst_file_path(normalized_src_path)
         dst_path = os.path.join(dst_dir_path, os.path.basename(temp_dst_path))
         logger.info("\nfound sequence is:\t" + normalized_src_path)
 
-        # 次ぎにいく前に,minPad&連番が1秒未満かチェック。
-        if srcOpt["minPad"] > 4 or srcOpt["count"] < float(CONFIG['fps']):
+        # minPad＆連番が1秒未満＆パスがasciiかチェック。
+        if srcOpt["minPad"] > 4 or srcOpt["count"] < float(CONFIG['fps']) or not _is_ascii(
+                normalized_src_path):
 
             # TempSrcFootageを作成
             last_file_path = _create_temp_src_footage(normalized_src_path)
@@ -263,6 +278,10 @@ def _walk_folder(folder_path):
         else:
             _exec_ffmpeg(normalized_src_path, _get_unique_path_with_pad(dst_path), is_seq=True,
                          start_number=srcOpt["minPad"])
+
+
+def _is_ascii(text):
+    return ASCII_REG.match(text)
 
 
 def _ffmpeg_exists(path):
@@ -286,11 +305,8 @@ def main():
 
     # windowsならicon表示
     if sys.platform == "win32":
-        if getattr(sys, 'frozen', False) and '_MEIPASS2' in os.environ:
-            root.iconbitmap(os.path.join(os.environ['_MEIPASS2'], 'libs/app.ico'))
-        else:
-            root.iconbitmap(
-                default=os.path.normcase(os.path.join(os.path.dirname(os.path.realpath(__file__)) + '/libs/app.ico')))
+        root.iconbitmap(
+            default=os.path.normcase(os.path.join(BASE_DIR + '/libs/app.ico')))
 
     # 通常実行かconfigか分岐
     if sys.argv[1:] and _ffmpeg_exists(CONFIG['ffmpegPath']) and _ffprobe_exists(CONFIG['ffprobePath']):
@@ -304,12 +320,13 @@ def main():
         logger.info("Hello.")
         logger.debug("given args:\t" + str(target_arg))
         for input_folder_path in target_arg:
+            input_folder_path = unicode(input_folder_path, ENC)
             if os.path.isdir(input_folder_path):
                 _walk_folder(input_folder_path)
             else:
-                src_path = input_folder_path.decode(enc)
+                src_path = input_folder_path
                 logger.info("\nfound file is:\t" + src_path)
-                if _is_video(src_path) or _is_video(src_path):
+                if _is_video(src_path) or _is_image(src_path):
                     dst_path = _get_unique_path_with_pad(_make_dst_file_path(src_path))
                     _exec_ffmpeg(src_path, dst_path)
                 else:
