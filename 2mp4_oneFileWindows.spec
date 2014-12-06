@@ -1,6 +1,7 @@
 # -*- mode: python -*-
+# pyinstaller 2mp4_oneFileWindows.spec
 a = Analysis(['2mp4.py'],
-             pathex=['C:\\Users\\h_okuno\\PycharmProjects\\2mp4'],
+             pathex=['PATH\\TO\\2mp4'],
              hiddenimports=[],
              hookspath=None,
              runtime_hooks=None)

@@ -1,6 +1,6 @@
 # -*- mode: python -*-
 a = Analysis(['2mp4.py'],
-             pathex=['/Users/pixel/dev/2mp4'],
+             pathex=['PATH/TO/2mp4'],
              hiddenimports=[],
              hookspath=None,
              runtime_hooks=None)
