@@ -8,7 +8,7 @@ extra_tree = Tree('./libs', prefix='libs', excludes=None)
 pyz = PYZ(a.pure)
 exe = EXE(pyz,
           a.scripts,
-          [('s', None, 'OPTION')],
+          [('-S', None, 'OPTION')],
           a.binaries + extra_tree,
           a.zipfiles,
           a.datas,

@@ -10,7 +10,7 @@ print extra_tree
 pyz = PYZ(a.pure)
 exe = EXE(pyz,
           a.scripts,
-          [('s', None, 'OPTION')],
+          [('-S', None, 'OPTION')],
           a.binaries + extra_tree,
           a.zipfiles,
           a.datas,
@@ -18,5 +18,5 @@ exe = EXE(pyz,
           debug=False,
           strip=None,
           upx=True,
-          console=False,
+          console=True,
           icon='libs\\app.ico')
