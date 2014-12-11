@@ -204,8 +204,8 @@ def _exec_ffmpeg(src_path, dst_path, is_seq=False, start_number=None):
     dst_path_for_print = dst_path
     stats = _get_movie_stats(src_path)
     batch_string = CONFIG['ffmpegPath']
-    src_path = src_path.replace('\\', '/')
-    dst_path = dst_path.replace('\\', '/')
+    src_path = "\"" + src_path.replace('\\', '/') + "\""
+    dst_path = "\"" + dst_path.replace('\\', '/') + "\""
 
     # input setting
     if is_seq:
