@@ -32,8 +32,10 @@ logger = logging.getLogger()
 if getattr(sys, 'frozen', False):
     # frozen
     BASE_DIR = os.path.dirname(sys.executable)
-    if sys.platform == "win32" and '_MEIPASS2' in os.environ:
-        BASE_DIR = os.environ['_MEIPASS2']
+    # noinspection PyProtectedMember
+    if sys.platform == "win32" and sys._MEIPASS:
+        # noinspection PyProtectedMember
+        BASE_DIR = sys._MEIPASS
     else:
         BASE_DIR = os.path.dirname(sys.executable)
 
