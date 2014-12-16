@@ -111,18 +111,21 @@ def _get_movie_stats(src_path):
         # noinspection PyUnresolvedReferences
         si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         # si.wShowWindow = subprocess.SW_HIDE # default
-        p = subprocess.Popen([CONFIG['ffprobePath'], '-show_streams', src_path], stdout=subprocess.PIPE,
+        p = subprocess.Popen([CONFIG['ffprobePath'], '-show_streams', '-print_format', 'json', src_path],
+                             stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, startupinfo=si, env=ENV_TMP)
     else:
-        p = subprocess.Popen([CONFIG['ffprobePath'], '-show_streams', src_path], stdout=subprocess.PIPE,
+        p = subprocess.Popen([CONFIG['ffprobePath'], '-show_streams', '-print_format', 'json', src_path],
+                             stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, env=ENV_TMP)
     out, err = p.communicate()
-    logger.debug("\n\tffprobe error:\n" + err)
+    print out
+    # logger.debug("\n\tffprobe error:\n" + err)
     logger.debug("\n\tffprobe log:\n" + out)
-    width = re.search('width=(\d+)', out).group(1)
-    height = re.search('height=(\d+)', out).group(1)
-    frame_rate = re.search('r_frame_rate=(\d+\.\d+|\d+)/', out).group(1)
-    pix_fmt = re.search('pix_fmt=(.+)', out).group(1)
+    width = re.search('"width": (\d+)', out).group(1)
+    height = re.search('"height": (\d+)', out).group(1)
+    frame_rate = re.search('"r_frame_rate": "(\d+\.\d+|\d+)/', out).group(1)
+    pix_fmt = re.search('"pix_fmt": "(.+)"', out).group(1)
     return dict({"width": width, "height": height, "frame_rate": frame_rate, "pix_fmt": pix_fmt})
 
 
