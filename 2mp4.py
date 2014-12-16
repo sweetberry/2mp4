@@ -119,7 +119,6 @@ def _get_movie_stats(src_path):
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, env=ENV_TMP)
     out, err = p.communicate()
-    print out
     # logger.debug("\n\tffprobe error:\n" + err)
     logger.debug("\n\tffprobe log:\n" + out)
     width = re.search('"width": (\d+)', out).group(1)
