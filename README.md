@@ -5,7 +5,6 @@
 
 ## Description
 ffmpeg用のラッパーです。
-## Demo
 
 ## VS. 
 
@@ -21,11 +20,15 @@ ffmpeg用のラッパーです。
 ## Install
 
 - for Windows
-    * cx_Freezeで実行ファイル化してください  
-```python setup.py build ```
+    * pyinstallerで実行ファイル化してください  
+```pyinstaller 2mp4_oneFileWindows.spec ```
 
 - for osX
-    * automatorで実行してください。  
+    * pyinstallerで実行ファイル化してください  
+```pyinstaller 2mp4.py --onefile --windowed ```
+    * dist/2mp4.app/Contents/Resources/icon-windowed.icns　を置換
+    
+    * もしくはautomatorで実行してください。  
 ![代替テキスト](libs/automatorSetting.png)
 
 - 初回起動時にffmpeg,ffprobeのパスを通す必要があります。  
