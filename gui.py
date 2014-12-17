@@ -31,6 +31,7 @@ config_f.close()
 class ConfigWindow(Tkinter.Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
+        master.resizable(width=FALSE, height=FALSE)
         self.master.title('configure')
         self.video_val = StringVar()
         self.audio_val = StringVar()
@@ -75,7 +76,7 @@ class ConfigWindow(Tkinter.Frame):
         return
 
     def __make_zoom_rows(self):
-        Label(self, text='zoom : ', width=10).grid(row=2, column=0, sticky=E)
+        Label(self, text='zoom : ').grid(row=2, column=0, sticky=E)
         Label(self, text='%').grid(row=2, column=2, sticky=W)
 
         # noinspection PyUnusedLocal
