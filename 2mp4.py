@@ -249,8 +249,7 @@ def _exec_ffmpeg(src_path, dst_path, is_seq=False, start_number=None):
         p = subprocess.Popen(shlex.split(batch_string), stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, startupinfo=si)
     else:
-        arg = batch_string.split()
-        p = subprocess.Popen(arg, stdout=subprocess.PIPE,
+        p = subprocess.Popen(shlex.split(batch_string), stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, shell=False)
     logger.debug("\n\tffmpeg log:")
     for line in iter(p.stderr.readline, b''):
