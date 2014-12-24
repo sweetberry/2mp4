@@ -27,6 +27,7 @@ ffmpeg用のラッパーです。
     * pyinstallerで実行ファイル化してください  
 ```pyinstaller 2mp4.py --onefile --windowed ```
     * dist/2mp4.app/Contents/Resources/icon-windowed.icns　を置換
+    * Contents/Info.plist の改行コードをCRに
     
     * もしくはautomatorで実行してください。  
 ![代替テキスト](libs/automatorSetting.png)

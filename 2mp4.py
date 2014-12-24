@@ -235,6 +235,9 @@ def _exec_ffmpeg(src_path, dst_path, is_seq=False, start_number=None):
     # audio setting
     batch_string += TEMPLATE['audio'][CONFIG['audio']]
 
+    # fastStart
+    batch_string += " -movflags faststart "
+
     # output setting
     batch_string += " -s " + width + "x" + height
     batch_string += " -r " + str(frame_rate)
@@ -247,10 +250,10 @@ def _exec_ffmpeg(src_path, dst_path, is_seq=False, start_number=None):
         si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         # si.wShowWindow = subprocess.SW_HIDE # default
         p = subprocess.Popen(shlex.split(batch_string), stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE, startupinfo=si)
+                             stderr=subprocess.PIPE, startupinfo=si, bufsize=-1)
     else:
         p = subprocess.Popen(shlex.split(batch_string), stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE, shell=False)
+                             stderr=subprocess.PIPE, shell=False, bufsize=-1)
     logger.debug("\n\tffmpeg log:")
     for line in iter(p.stderr.readline, b''):
         logger.debug("\t" + line)
